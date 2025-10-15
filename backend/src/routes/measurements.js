@@ -1,4 +1,3 @@
-
 import express from 'express';
 import Measurement from '../models/Measurement.js';
 import Station from '../models/Stations.js';
@@ -7,7 +6,7 @@ import { validateMeasurement, validateSaveEcoBotData } from '../middleware/valid
 const router = express.Router();
 
 // GET /api/measurements - Отримати вимірювання
-router.get('/', async (req, res) => {
+router.get('/latest', async (req, res) => {
   try {
     const {
       station_id,
@@ -244,6 +243,41 @@ router.get('/statistics/:station_id', async (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+// PUT /api/measurements/:id - Оновити вимірювання
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updated = await Measurement.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!updated) {
+      return res.status(404).json({ success: false, error: 'Measurement not found' });
+    }
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE /api/measurements/:id - Видалити вимірювання
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Measurement.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: 'Measurement not found' });
+    }
+
+    res.json({ success: true, message: 'Measurement deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
